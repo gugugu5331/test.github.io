@@ -1,606 +1,154 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>知识消消乐</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
         body {
-            font-family: 'Microsoft YaHei', sans-serif;
-            background-color: #f5f5f5;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+            background-color: #FFF8E7;
+            margin: 0;
             padding: 20px;
+            font-family: Arial, sans-serif;
         }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
         h1 {
-            color: #3498db;
-            margin-bottom: 10px;
-        }
-        
-        .info-panel {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 800px;
-            margin-bottom: 20px;
-            background-color: #fff;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .score, .time, .level {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .score-label, .time-label, .level-label {
-            font-size: 14px;
-            color: #7f8c8d;
-        }
-        
-        .score-value, .time-value, .level-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        
-        .game-board {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            width: 100%;
-            max-width: 800px;
-            margin-bottom: 20px;
-        }
-        
-        .card {
-            aspect-ratio: 3/4;
-            background-color: #3498db;
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: transform 0.3s, background-color 0.3s;
-            transform-style: preserve-3d;
-            position: relative;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .card-front, .card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 10px;
-            padding: 10px;
             text-align: center;
+            color: #FF6B6B;
+            margin-bottom: 30px;
         }
-        
-        .card-front {
-            background-color: #3498db;
-            transform: rotateY(180deg);
-            color: white;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        
-        .card-back {
-            background-color: #2980b9;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><text x="50%" y="50%" font-size="20" text-anchor="middle" dominant-baseline="middle" fill="white">?</text></svg>');
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-        
-        .card.flipped {
-            transform: rotateY(180deg);
-        }
-        
-        .card.matched {
-            background-color: #27ae60;
-            cursor: default;
-        }
-        
-        .card.matched .card-front {
-            background-color: #27ae60;
-        }
-        
-        .controls {
+        #game {
+            max-width: 800px;
+            margin: 0 auto;
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
-            margin-bottom: 20px;
         }
-        
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            background-color: #3498db;
-            color: white;
-            font-weight: bold;
+        .bubble {
+            width: 80px;
+            height: 80px;
+            background-color: #87CEEB;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            transition: background-color 0.3s;
+            text-align: center;
+            padding: 5px;
+            font-size: 14px;
+            transition: all 0.3s;
         }
-        
-        button:hover {
-            background-color: #2980b9;
+        .bubble:hover {
+            transform: scale(1.1);
         }
-        
-        .modal {
+        .hidden {
+            visibility: hidden;
+        }
+        #timer {
+            text-align: center;
+            font-size: 20px;
+            margin: 20px 0;
+        }
+        #success {
             display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
             text-align: center;
-            max-width: 500px;
-            width: 90%;
-        }
-        
-        .modal h2 {
-            color: #3498db;
-            margin-bottom: 20px;
-        }
-        
-        .modal p {
-            margin-bottom: 20px;
-            font-size: 18px;
-        }
-        
-        .topic-selector {
-            margin-bottom: 20px;
-        }
-        
-        .topic-selector select {
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            width: 100%;
-            font-size: 16px;
-        }
-        
-        @media (max-width: 600px) {
-            .game-board {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            
-            .info-panel {
-                flex-direction: column;
-                gap: 10px;
-            }
+            font-size: 24px;
+            color: #4CAF50;
+            margin-top: 30px;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>知识消消乐</h1>
-        <p>找出配对的知识点，提高你的记忆力！</p>
-    </div>
-    
-    <div class="info-panel">
-        <div class="score">
-            <span class="score-label">得分</span>
-            <span class="score-value" id="score">0</span>
-        </div>
-        <div class="time">
-            <span class="time-label">时间</span>
-            <span class="time-value" id="time">60</span>
-        </div>
-        <div class="level">
-            <span class="level-label">关卡</span>
-            <span class="level-value" id="level">1</span>
-        </div>
-    </div>
-    
-    <div class="controls">
-        <button id="start-btn">开始游戏</button>
-        <button id="reset-btn">重置游戏</button>
-        <button id="topic-btn">选择主题</button>
-    </div>
-    
-    <div class="game-board" id="game-board"></div>
-    
-    <div class="modal" id="topic-modal">
-        <div class="modal-content">
-            <h2>选择知识主题</h2>
-            <div class="topic-selector">
-                <select id="topic-select">
-                    <option value="history">历史知识</option>
-                    <option value="science">科学知识</option>
-                    <option value="geography">地理知识</option>
-                    <option value="literature">文学知识</option>
-                    <option value="math">数学知识</option>
-                </select>
-            </div>
-            <button id="confirm-topic">确认</button>
-        </div>
-    </div>
-    
-    <div class="modal" id="game-over-modal">
-        <div class="modal-content">
-            <h2>游戏结束</h2>
-            <p>你的得分: <span id="final-score">0</span></p>
-            <p>用时: <span id="time-used">0</span> 秒</p>
-            <button id="play-again">再玩一次</button>
-        </div>
-    </div>
-    
-    <div class="modal" id="level-complete-modal">
-        <div class="modal-content">
-            <h2>恭喜！</h2>
-            <p>你完成了第 <span id="completed-level">1</span> 关！</p>
-            <p>得分: <span id="level-score">0</span></p>
-            <button id="next-level">下一关</button>
-        </div>
-    </div>
+    <h1>知识消消乐</h1>
+    <div id="timer">时间：0秒</div>
+    <div id="game"></div>
+    <div id="success"></div>
 
     <script>
-        // 知识点数据库
-        const knowledgeDB = {
-            history: [
-                { id: 1, content: "秦始皇", matchId: 2 },
-                { id: 2, content: "中国第一位皇帝", matchId: 1 },
-                { id: 3, content: "1492年", matchId: 4 },
-                { id: 4, content: "哥伦布发现美洲", matchId: 3 },
-                { id: 5, content: "拿破仑", matchId: 6 },
-                { id: 6, content: "法国著名军事家和政治家", matchId: 5 },
-                { id: 7, content: "1945年", matchId: 8 },
-                { id: 8, content: "第二次世界大战结束", matchId: 7 },
-                { id: 9, content: "文艺复兴", matchId: 10 },
-                { id: 10, content: "欧洲14-17世纪的文化运动", matchId: 9 },
-                { id: 11, content: "孙中山", matchId: 12 },
-                { id: 12, content: "中国民主革命的先行者", matchId: 11 },
-                { id: 13, content: "1949年10月1日", matchId: 14 },
-                { id: 14, content: "中华人民共和国成立", matchId: 13 },
-                { id: 15, content: "亚历山大大帝", matchId: 16 },
-                { id: 16, content: "马其顿帝国的统治者", matchId: 15 }
-            ],
-            science: [
-                { id: 1, content: "牛顿", matchId: 2 },
-                { id: 2, content: "万有引力定律", matchId: 1 },
-                { id: 3, content: "爱因斯坦", matchId: 4 },
-                { id: 4, content: "相对论", matchId: 3 },
-                { id: 5, content: "DNA", matchId: 6 },
-                { id: 6, content: "脱氧核糖核酸", matchId: 5 },
-                { id: 7, content: "光合作用", matchId: 8 },
-                { id: 8, content: "植物利用光能合成有机物", matchId: 7 },
-                { id: 9, content: "元素周期表", matchId: 10 },
-                { id: 10, content: "门捷列夫", matchId: 9 },
-                { id: 11, content: "电磁波", matchId: 12 },
-                { id: 12, content: "麦克斯韦方程组", matchId: 11 },
-                { id: 13, content: "量子力学", matchId: 14 },
-                { id: 14, content: "微观粒子的物理学", matchId: 13 },
-                { id: 15, content: "细胞", matchId: 16 },
-                { id: 16, content: "生物体的基本结构单位", matchId: 15 }
-            ],
-            geography: [
-                { id: 1, content: "喜马拉雅山", matchId: 2 },
-                { id: 2, content: "世界最高山脉", matchId: 1 },
-                { id: 3, content: "亚马逊河", matchId: 4 },
-                { id: 4, content: "世界流量最大的河流", matchId: 3 },
-                { id: 5, content: "撒哈拉沙漠", matchId: 6 },
-                { id: 6, content: "世界最大的沙漠", matchId: 5 },
-                { id: 7, content: "北极", matchId: 8 },
-                { id: 8, content: "地球最北端", matchId: 7 },
-                { id: 9, content: "太平洋", matchId: 10 },
-                { id: 10, content: "世界最大的海洋", matchId: 9 },
-                { id: 11, content: "赤道", matchId: 12 },
-                { id: 12, content: "地球表面与地轴垂直的大圆", matchId: 11 },
-                { id: 13, content: "珠穆朗玛峰", matchId: 14 },
-                { id: 14, content: "海拔8848.86米", matchId: 13 },
-                { id: 15, content: "死海", matchId: 16 },
-                { id: 16, content: "地球表面最低点", matchId: 15 }
-            ],
-            literature: [
-                { id: 1, content: "《红楼梦》", matchId: 2 },
-                { id: 2, content: "曹雪芹", matchId: 1 },
-                { id: 3, content: "《哈姆雷特》", matchId: 4 },
-                { id: 4, content: "莎士比亚", matchId: 3 },
-                { id: 5, content: "《战争与和平》", matchId: 6 },
-                { id: 6, content: "列夫·托尔斯泰", matchId: 5 },
-                { id: 7, content: "《百年孤独》", matchId: 8 },
-                { id: 8, content: "加西亚·马尔克斯", matchId: 7 },
-                { id: 9, content: "《西游记》", matchId: 10 },
-                { id: 10, content: "吴承恩", matchId: 9 },
-                { id: 11, content: "《三国演义》", matchId: 12 },
-                { id: 12, content: "罗贯中", matchId: 11 },
-                { id: 13, content: "《水浒传》", matchId: 14 },
-                { id: 14, content: "施耐庵", matchId: 13 },
-                { id: 15, content: "《傲慢与偏见》", matchId: 16 },
-                { id: 16, content: "简·奥斯汀", matchId: 15 }
-            ],
-            math: [
-                { id: 1, content: "勾股定理", matchId: 2 },
-                { id: 2, content: "a²+b²=c²", matchId: 1 },
-                { id: 3, content: "π", matchId: 4 },
-                { id: 4, content: "圆周率", matchId: 3 },
-                { id: 5, content: "微积分", matchId: 6 },
-                { id: 6, content: "牛顿和莱布尼茨", matchId: 5 },
-                { id: 7, content: "欧拉公式", matchId: 8 },
-                { id: 8, content: "e^(iπ)+1=0", matchId: 7 },
-                { id: 9, content: "斐波那契数列", matchId: 10 },
-                { id: 10, content: "1, 1, 2, 3, 5, 8, 13...", matchId: 9 },
-                { id: 11, content: "黎曼猜想", matchId: 12 },
-                { id: 12, content: "关于Zeta函数的零点", matchId: 11 },
-                { id: 13, content: "费马大定理", matchId: 14 },
-                { id: 14, content: "x^n+y^n=z^n无正整数解(n>2)", matchId: 13 },
-                { id: 15, content: "高斯", matchId: 16 },
-                { id: 16, content: "数学王子", matchId: 15 }
-            ]
-        };
+        // 知识点列表（每个知识点出现两次）
+        const knowledgePoints = [
+            '尊（尊重）', '接（接纳）', '同（共情）', '表（表达）',
+            '诚（真诚）', '爱（关爱）', '简短提问', '分步引导',
+            '转移注意力', '眼神接触', '微笑', '触摸手部',
+            '回忆疗法', '正面语言', '放慢语速', '重复信息',
+            '尊（尊重）', '接（接纳）', '同（共情）', '表（表达）',
+            '诚（真诚）', '爱（关爱）', '简短提问', '分步引导',
+            '转移注意力', '眼神接触', '微笑', '触摸手部',
+            '回忆疗法', '正面语言', '放慢语速', '重复信息'
+        ];
 
-        // 游戏状态
-        let gameState = {
-            isPlaying: false,
-            score: 0,
-            time: 60,
-            level: 1,
-            selectedCards: [],
-            matchedPairs: 0,
-            totalPairs: 0,
-            timer: null,
-            currentTopic: 'history'
-        };
-
-        // DOM元素
-        const gameBoard = document.getElementById('game-board');
-        const scoreElement = document.getElementById('score');
-        const timeElement = document.getElementById('time');
-        const levelElement = document.getElementById('level');
-        const startButton = document.getElementById('start-btn');
-        const resetButton = document.getElementById('reset-btn');
-        const topicButton = document.getElementById('topic-btn');
-        const topicModal = document.getElementById('topic-modal');
-        const gameOverModal = document.getElementById('game-over-modal');
-        const levelCompleteModal = document.getElementById('level-complete-modal');
-        const topicSelect = document.getElementById('topic-select');
-        const confirmTopicButton = document.getElementById('confirm-topic');
-        const finalScoreElement = document.getElementById('final-score');
-        const timeUsedElement = document.getElementById('time-used');
-        const playAgainButton = document.getElementById('play-again');
-        const nextLevelButton = document.getElementById('next-level');
-        const completedLevelElement = document.getElementById('completed-level');
-        const levelScoreElement = document.getElementById('level-score');
+        let firstClick = null;
+        let isChecking = false;
+        let startTime = Date.now();
+        let timerInterval;
+        let matchedPairs = 0;
 
         // 初始化游戏
         function initGame() {
-            gameState.isPlaying = false;
-            gameState.score = 0;
-            gameState.level = 1;
-            gameState.matchedPairs = 0;
-            updateUI();
-            clearGameBoard();
-        }
-
-        // 更新UI
-        function updateUI() {
-            scoreElement.textContent = gameState.score;
-            timeElement.textContent = gameState.time;
-            levelElement.textContent = gameState.level;
-        }
-
-        // 清空游戏板
-        function clearGameBoard() {
-            gameBoard.innerHTML = '';
-        }
-
-        // 开始游戏
-        function startGame() {
-            if (gameState.isPlaying) return;
+            const game = document.getElementById('game');
+            const shuffled = [...knowledgePoints].sort(() => Math.random() - 0.5);
             
-            gameState.isPlaying = true;
-            gameState.time = 60 + (gameState.level - 1) * 30;
-            gameState.matchedPairs = 0;
-            gameState.selectedCards = [];
-            
-            clearGameBoard();
-            createCards();
-            startTimer();
-            
-            updateUI();
-        }
-
-        // 创建卡片
-        function createCards() {
-            // 根据关卡决定卡片数量
-            const pairsCount = Math.min(8 + (gameState.level - 1) * 2, 16);
-            gameState.totalPairs = pairsCount;
-            
-            // 从知识库中选择卡片
-            let selectedKnowledge = [...knowledgeDB[gameState.currentTopic]].slice(0, pairsCount * 2);
-            
-            // 打乱顺序
-            selectedKnowledge = shuffleArray(selectedKnowledge);
-            
-            // 设置游戏板的网格列数
-            const columns = gameState.level <= 2 ? 4 : (gameState.level <= 4 ? 5 : 6);
-            gameBoard.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
-            
-            // 创建卡片元素
-            selectedKnowledge.forEach((item, index) => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.dataset.id = item.id;
-                card.dataset.matchId = item.matchId;
-                
-                const cardFront = document.createElement('div');
-                cardFront.className = 'card-front';
-                cardFront.textContent = item.content;
-                
-                const cardBack = document.createElement('div');
-                cardBack.className = 'card-back';
-                
-                card.appendChild(cardFront);
-                card.appendChild(cardBack);
-                
-                card.addEventListener('click', () => handleCardClick(card));
-                
-                gameBoard.appendChild(card);
+            shuffled.forEach((text, index) => {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.textContent = text;
+                bubble.dataset.index = index;
+                bubble.addEventListener('click', handleClick);
+                game.appendChild(bubble);
             });
-        }
 
-        // 处理卡片点击
-        function handleCardClick(card) {
-            if (!gameState.isPlaying) return;
-            if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
-            if (gameState.selectedCards.length >= 2) return;
-            
-            // 翻转卡片
-            card.classList.add('flipped');
-            gameState.selectedCards.push(card);
-            
-            // 如果选择了两张卡片，检查是否匹配
-            if (gameState.selectedCards.length === 2) {
-                const card1 = gameState.selectedCards[0];
-                const card2 = gameState.selectedCards[1];
-                
-                const isMatch = 
-                    (card1.dataset.id === card2.dataset.matchId && 
-                     card2.dataset.id === card1.dataset.matchId);
-                
-                if (isMatch) {
-                    // 匹配成功
-                    setTimeout(() => {
-                        card1.classList.add('matched');
-                        card2.classList.add('matched');
-                        gameState.selectedCards = [];
-                        gameState.matchedPairs++;
-                        gameState.score += 10 * gameState.level;
-                        updateUI();
-                        
-                        // 检查是否完成所有匹配
-                        if (gameState.matchedPairs === gameState.totalPairs) {
-                            levelComplete();
-                        }
-                    }, 500);
-                } else {
-                    // 匹配失败
-                    setTimeout(() => {
-                        card1.classList.remove('flipped');
-                        card2.classList.remove('flipped');
-                        gameState.selectedCards = [];
-                    }, 1000);
-                }
-            }
-        }
-
-        // 开始计时器
-        function startTimer() {
-            if (gameState.timer) clearInterval(gameState.timer);
-            
-            gameState.timer = setInterval(() => {
-                gameState.time--;
-                timeElement.textContent = gameState.time;
-                
-                if (gameState.time <= 0) {
-                    gameOver();
-                }
+            // 启动计时器
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                document.getElementById('timer').textContent = `时间：${elapsed}秒`;
             }, 1000);
         }
 
-        // 游戏结束
-        function gameOver() {
-            gameState.isPlaying = false;
-            clearInterval(gameState.timer);
-            
-            finalScoreElement.textContent = gameState.score;
-            timeUsedElement.textContent = 60 + (gameState.level - 1) * 30 - gameState.time;
-            gameOverModal.style.display = 'flex';
-        }
+        // 处理点击事件
+        function handleClick(e) {
+            if (isChecking || e.target.classList.contains('hidden')) return;
 
-        // 关卡完成
-        function levelComplete() {
-            gameState.isPlaying = false;
-            clearInterval(gameState.timer);
-            
-            // 额外的时间奖励
-            const timeBonus = gameState.time * gameState.level;
-            gameState.score += timeBonus;
-            
-            completedLevelElement.textContent = gameState.level;
-            levelScoreElement.textContent = gameState.score;
-            levelCompleteModal.style.display = 'flex';
-        }
+            e.target.style.backgroundColor = '#FF6B6B';
 
-        // 下一关
-        function nextLevel() {
-            gameState.level++;
-            levelCompleteModal.style.display = 'none';
-            startGame();
-        }
+            if (!firstClick) {
+                firstClick = e.target;
+            } else {
+                isChecking = true;
+                const secondClick = e.target;
 
-        // 重置游戏
-        function resetGame() {
-            clearInterval(gameState.timer);
-            initGame();
-        }
-
-        // 打乱数组
-        function shuffleArray(array) {
-            const newArray = [...array];
-            for (let i = newArray.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                if (firstClick.textContent === secondClick.textContent && firstClick.dataset.index !== secondClick.dataset.index) {
+                    setTimeout(() => {
+                        firstClick.classList.add('hidden');
+                        secondClick.classList.add('hidden');
+                        matchedPairs++;
+                        checkWin();
+                        resetSelection();
+                    }, 500);
+                } else {
+                    setTimeout(() => {
+                        firstClick.style.backgroundColor = '#87CEEB';
+                        secondClick.style.backgroundColor = '#87CEEB';
+                        resetSelection();
+                    }, 500);
+                }
             }
-            return newArray;
         }
 
-        // 事件监听
-        startButton.addEventListener('click', startGame);
-        resetButton.addEventListener('click', resetGame);
-        topicButton.addEventListener('click', () => {
-            topicModal.style.display = 'flex';
-        });
-        
-        confirmTopicButton.addEventListener('click', () => {
-            gameState.currentTopic = topicSelect.value;
-            topicModal.style.display = 'none';
-            resetGame();
-        });
-        
-        playAgainButton.addEventListener('click', () => {
-            gameOverModal.style.display = 'none';
-            resetGame();
-            startGame();
-        });
-        
-        nextLevelButton.addEventListener('click', nextLevel);
+        function resetSelection() {
+            firstClick = null;
+            isChecking = false;
+        }
 
-        // 初始化游戏
+        function checkWin() {
+            if (matchedPairs === knowledgePoints.length / 2) {
+                clearInterval(timerInterval);
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                document.getElementById('success').innerHTML = `
+                    <div>🎉 恭喜你挑战成功！</div>
+                    <div>用时：${elapsed}秒</div>
+                `;
+                document.getElementById('success').style.display = 'block';
+            }
+        }
+
+        // 启动游戏
         initGame();
     </script>
 </body>
